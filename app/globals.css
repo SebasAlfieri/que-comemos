@@ -576,6 +576,19 @@ input:disabled {
   z-index: 30;
 }
 
+@media (min-width: 768px) {
+  .nav {
+    max-width: none;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .nav-item {
+    flex: none;
+    padding: 6px 14px;
+  }
+}
+
 .nav-item {
   flex: 1;
   display: flex;
