@@ -4,6 +4,7 @@ import { useState } from "react";
 import ChipSelect from "@/components/ChipSelect";
 import {
   addIngredient,
+  deleteDish,
   dishLinkHref,
   saveDish,
   type Ingredient,
@@ -22,6 +23,19 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
   const [selected, setSelected] = useState<string[]>(initial?.ingredients ?? []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!initial) return;
+    setSaving(true);
+    try {
+      await deleteDish(initial.id);
+      onClose();
+    } catch {
+      setError("No se pudo eliminar. Revisá la conexión.");
+      setSaving(false);
+    }
+  };
 
   const handleCreateIngredient = async (raw: string) => {
     const result = await addIngredient(raw);
@@ -143,7 +157,7 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
 
         {error && <p className="form-error">{error}</p>}
 
-        <div className="btn-row">
+        <div className="btn-row" style={{ marginTop: 24 }}>
           <button
             type="button"
             className="btn btn--accent btn--block"
@@ -153,7 +167,54 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
             {saving ? "Guardando…" : "Guardar"}
           </button>
         </div>
+
+        {initial && (
+          <button
+            type="button"
+            className="btn btn--danger btn--block"
+            onClick={() => setConfirmOpen(true)}
+            disabled={saving}
+          >
+            Eliminar platillo
+          </button>
+        )}
       </div>
+
+      {confirmOpen && initial && (
+        <div
+          className="modal-backdrop"
+          onClick={() => !saving && setConfirmOpen(false)}
+        >
+          <div
+            className="modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Eliminar platillo"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="modal-title">¿Eliminar «{initial.name}»?</p>
+            <p className="modal-text">Esta acción no se puede deshacer.</p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => setConfirmOpen(false)}
+                disabled={saving}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn--danger-solid"
+                onClick={confirmDelete}
+                disabled={saving}
+              >
+                {saving ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

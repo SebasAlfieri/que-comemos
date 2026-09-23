@@ -15,6 +15,16 @@ import {
 
 const STORAGE_KEY = "que-comemos:available";
 
+const HOME_TITLES = [
+  "Tengo hambre Belén 💀",
+  "¿Qué comemos Beluu? 👩‍🍳",
+  "¿Qué comemoo?",
+  "¿Qué comemos?",
+  "A ver que hay pa comer",
+  "Qué comemos version retro",
+  "Te quiero Beluuu",
+];
+
 type Match = {
   dish: Dish;
   matched: string[];
@@ -32,6 +42,9 @@ function loadSelection() {
 }
 
 export default function CocinaPage() {
+  const [title] = useState(
+    () => HOME_TITLES[Math.floor(Math.random() * HOME_TITLES.length)],
+  );
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [available, setAvailable] = useState<string[]>([]);
@@ -53,7 +66,7 @@ export default function CocinaPage() {
       (err) => {
         setError(describeFirestoreError(err));
         setLoading(false);
-      }
+      },
     );
     const unDishes = watchDishes(
       (items) => {
@@ -63,7 +76,7 @@ export default function CocinaPage() {
       (err) => {
         setError(describeFirestoreError(err));
         setLoading(false);
-      }
+      },
     );
     return () => {
       unIngredients();
@@ -81,15 +94,22 @@ export default function CocinaPage() {
 
   const availableKeys = useMemo(
     () => new Set(available.map(keyOf)),
-    [available]
+    [available],
   );
 
   const { ready, partial } = useMemo(() => {
-    const results: { ready: Match[]; partial: Match[] } = { ready: [], partial: [] };
+    const results: { ready: Match[]; partial: Match[] } = {
+      ready: [],
+      partial: [],
+    };
 
     for (const dish of dishes) {
-      const matched = dish.ingredients.filter((i) => availableKeys.has(keyOf(i)));
-      const missing = dish.ingredients.filter((i) => !availableKeys.has(keyOf(i)));
+      const matched = dish.ingredients.filter((i) =>
+        availableKeys.has(keyOf(i)),
+      );
+      const missing = dish.ingredients.filter(
+        (i) => !availableKeys.has(keyOf(i)),
+      );
       if (matched.length === 0) continue;
 
       const match: Match = { dish, matched, missing };
@@ -111,10 +131,7 @@ export default function CocinaPage() {
 
   if (error) {
     return (
-      <ErrorState
-        detail={error}
-        onRetry={() => window.location.reload()}
-      />
+      <ErrorState detail={error} onRetry={() => window.location.reload()} />
     );
   }
 
@@ -125,8 +142,8 @@ export default function CocinaPage() {
   return (
     <>
       <header className="page-header">
-        <h1 className="page-title">¿Qué comemos? 👩‍🍳</h1>
-        <p className="page-subtitle">Marcá lo que tenés en la heladera y te digo qué cocinar.</p>
+        <h1 className="page-title">{title}</h1>
+        {/* <p className="page-subtitle">Qué tenemos en la heladera?</p> */}
       </header>
 
       <section className="card">
@@ -237,7 +254,13 @@ export default function CocinaPage() {
   );
 }
 
-function DishMatchCard({ match, kind }: { match: Match; kind: "green" | "yellow" }) {
+function DishMatchCard({
+  match,
+  kind,
+}: {
+  match: Match;
+  kind: "green" | "yellow";
+}) {
   return (
     <article className={`dish-card dish-card--${kind}`}>
       <div className="dish-head">
@@ -285,7 +308,13 @@ function LoadingState() {
   );
 }
 
-function ErrorState({ detail, onRetry }: { detail: string; onRetry: () => void }) {
+function ErrorState({
+  detail,
+  onRetry,
+}: {
+  detail: string;
+  onRetry: () => void;
+}) {
   return (
     <>
       <header className="page-header">
@@ -298,7 +327,12 @@ function ErrorState({ detail, onRetry }: { detail: string; onRetry: () => void }
           projectId sea quecomemos-8f167 y que las reglas permitan lectura.
         </p>
         <pre className="error-detail">{detail}</pre>
-        <button type="button" className="btn btn--accent btn--block" style={{ marginTop: "12px" }} onClick={onRetry}>
+        <button
+          type="button"
+          className="btn btn--accent btn--block"
+          style={{ marginTop: "12px" }}
+          onClick={onRetry}
+        >
           Reintentar
         </button>
       </div>

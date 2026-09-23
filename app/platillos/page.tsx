@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import DishDetail from "@/components/DishDetail";
 import DishForm from "@/components/DishForm";
 import {
-  deleteDish,
+  dishLinkHref,
   watchDishes,
   watchIngredients,
   type Dish,
@@ -17,6 +18,7 @@ export default function PlatillosPage() {
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Dish | null>(null);
+  const [detail, setDetail] = useState<Dish | null>(null);
 
   useEffect(() => {
     const unDishes = watchDishes(
@@ -44,15 +46,6 @@ export default function PlatillosPage() {
       unIngredients();
     };
   }, []);
-
-  const handleDelete = async (dish: Dish) => {
-    if (!window.confirm(`¿Eliminar «${dish.name}»?`)) return;
-    try {
-      await deleteDish(dish.id);
-    } catch {
-      window.alert("No se pudo eliminar. Revisá la conexión.");
-    }
-  };
 
   const openCreate = () => {
     setEditing(null);
@@ -105,28 +98,46 @@ export default function PlatillosPage() {
           <p>Agregá tu primera receta y los ingredientes que lleva.</p>
         </div>
       ) : (
-        dishes.map((dish) => (
-          <article key={dish.id} className="list-item">
+dishes.map((dish) => (
+          <article
+            key={dish.id}
+            className="list-item list-item--open"
+            onClick={() => setDetail(dish)}
+          >
             <div className="list-item-name">{dish.name}</div>
-            <span className="count-pill">{dish.ingredients.length}</span>
-            <div className="actions">
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => openEdit(dish)}
-                aria-label={`Editar ${dish.name}`}
+            {dish.link && (
+              <a
+                className="play-btn"
+                href={dishLinkHref(dish.link)}
+                target="_blank"
+                rel="noreferrer"
+                title={`Ver video de ${dish.name}`}
+                aria-label={`Ver video de ${dish.name}`}
+                onClick={(e) => e.stopPropagation()}
               >
-                ✏️
-              </button>
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() => handleDelete(dish)}
-                aria-label={`Eliminar ${dish.name}`}
-              >
-                🗑️
-              </button>
-            </div>
+                <svg
+                  viewBox="0 0 24 24"
+                  width="9"
+                  height="9"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </a>
+            )}
+            <span className="count-pill count-pill--num">{dish.ingredients.length}</span>
+            <button
+              type="button"
+              className="icon-btn list-edit"
+              onClick={(e) => {
+                e.stopPropagation();
+                openEdit(dish);
+              }}
+              aria-label={`Editar ${dish.name}`}
+            >
+              ✏️
+            </button>
           </article>
         ))
       )}
@@ -138,6 +149,8 @@ export default function PlatillosPage() {
           onClose={() => setFormOpen(false)}
         />
       )}
+
+      {detail && <DishDetail dish={detail} onClose={() => setDetail(null)} />}
     </>
   );
 }
