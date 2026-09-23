@@ -19,6 +19,8 @@ export default function PlatillosPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Dish | null>(null);
   const [detail, setDetail] = useState<Dish | null>(null);
+  const [randomOpen, setRandomOpen] = useState(false);
+  const [randomThree, setRandomThree] = useState<Dish[]>([]);
 
   useEffect(() => {
     const unDishes = watchDishes(
@@ -55,6 +57,20 @@ export default function PlatillosPage() {
   const openEdit = (dish: Dish) => {
     setEditing(dish);
     setFormOpen(true);
+  };
+
+  const pickRandom = (list: Dish[], count: number) => {
+    const arr = [...list];
+    for (let i = arr.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, count);
+  };
+
+  const openRandom = () => {
+    setRandomThree(pickRandom(dishes, 3));
+    setRandomOpen(true);
   };
 
   if (loading) {
@@ -142,6 +158,23 @@ dishes.map((dish) => (
         ))
       )}
 
+      {dishes.length > 0 && (
+        <button
+          type="button"
+          className="btn btn--accent"
+          style={{
+            marginTop: 18,
+            width: "fit-content",
+            marginLeft: "auto",
+            marginRight: "auto",
+            display: "flex",
+          }}
+          onClick={openRandom}
+        >
+          🎲 Elegir al azar
+        </button>
+      )}
+
       {formOpen && (
         <DishForm
           initial={editing}
@@ -151,6 +184,41 @@ dishes.map((dish) => (
       )}
 
       {detail && <DishDetail dish={detail} onClose={() => setDetail(null)} />}
+
+      {randomOpen && (
+        <div className="modal-backdrop" onClick={() => setRandomOpen(false)}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Elegir al azar"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="modal-title">🎲 Elegí uno</p>
+            <p className="modal-text">
+              Tres platillos al azar: tocá uno para armar la lista de compras.
+            </p>
+            <div className="random-list">
+              {randomThree.map((dish) => (
+                <button
+                  key={dish.id}
+                  type="button"
+                  className="random-item"
+                  onClick={() => {
+                    setRandomOpen(false);
+                    setDetail(dish);
+                  }}
+                >
+                  <span>{dish.name}</span>
+                  <span className="count-pill count-pill--num">
+                    {dish.ingredients.length}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

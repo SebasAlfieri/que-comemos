@@ -208,6 +208,7 @@ select,
 .chip-btn,
 .chip-cell,
 .chip-note,
+.random-item,
 .btn,
 .icon-btn {
   -webkit-touch-callout: none;
@@ -677,6 +678,41 @@ select,
 
 .modal-actions .btn {
   flex: 1;
+}
+
+.random-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.random-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.08s ease;
+}
+
+.random-item:hover {
+  background: var(--surface-2);
+}
+
+.random-item:active {
+  transform: scale(0.98);
 }
 
 .list-item {
