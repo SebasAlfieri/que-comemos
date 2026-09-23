@@ -137,6 +137,7 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
             onChange={setSelected}
             placeholder="Buscar o crear ingrediente…"
             onCreate={handleCreateIngredient}
+            onlyMarks
           />
         </div>
 
