@@ -201,6 +201,20 @@ input {
   line-height: 13px;
 }
 
+input,
+textarea,
+select,
+.chip,
+.chip-btn,
+.chip-cell,
+.chip-note,
+.btn,
+.icon-btn {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .chip-note {
   position: absolute;
   top: calc(100% - 10px);
@@ -836,6 +850,11 @@ input:disabled {
   display: flex;
   padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
   z-index: 30;
+  transition: transform 0.2s ease;
+}
+
+body:has(input:focus, textarea:focus, select:focus) .nav {
+  transform: translateX(-50%) translateY(100%);
 }
 
 @media (min-width: 768px) {
@@ -862,10 +881,14 @@ input:disabled {
   color: var(--muted);
   font-size: 0.72rem;
   font-weight: 600;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .nav-item--active {
   color: var(--accent);
+  background: var(--surface-2);
 }
 
 .nav-icon {
