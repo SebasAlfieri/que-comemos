@@ -1,0 +1,179 @@
+import { db } from "./firebase";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  updateDoc,
+  writeBatch,
+} from "firebase/firestore";
+
+export type Ingredient = { id: string; name: string };
+
+export type Dish = {
+  id: string;
+  name: string;
+  ingredients: string[];
+  link?: string;
+};
+
+function capitalizeFirst(value: string) {
+  return value.charAt(0).toLocaleUpperCase() + value.slice(1);
+}
+
+export function normalizeName(value: string) {
+  return capitalizeFirst(value.trim().replace(/\s+/g, " "));
+}
+
+export function describeFirestoreError(error: unknown): string {
+  if (typeof error === "object" && error !== null) {
+    const e = error as { code?: unknown; message?: unknown };
+    const code = typeof e.code === "string" ? e.code : "";
+    const message = typeof e.message === "string" ? e.message : "";
+    if (code && message) return `${code}: ${message}`;
+    if (code) return code;
+    if (message) return message;
+  }
+  return String(error);
+}
+
+export function keyOf(value: string) {
+  return normalizeName(value).toLocaleLowerCase();
+}
+
+export function watchIngredients(
+  onChange: (items: Ingredient[]) => void,
+  onError: (error: unknown) => void
+) {
+  return onSnapshot(
+    query(collection(db, "ingredients")),
+    (snap) => {
+      const items: Ingredient[] = snap.docs
+        .map((d) => ({ id: d.id, name: d.data().name as string }))
+        .filter((i) => typeof i.name === "string")
+        .sort((a, b) => a.name.localeCompare(b.name, "es"));
+      onChange(items);
+    },
+    onError
+  );
+}
+
+export function watchDishes(
+  onChange: (items: Dish[]) => void,
+  onError: (error: unknown) => void
+) {
+  return onSnapshot(
+    query(collection(db, "dishes")),
+    (snap) => {
+      const items: Dish[] = snap.docs
+        .map((d) => ({
+          id: d.id,
+          name: d.data().name as string,
+          ingredients: (d.data().ingredients ?? []) as string[],
+          link: typeof d.data().link === "string" ? d.data().link : "",
+        }))
+        .filter((d) => typeof d.name === "string")
+        .sort((a, b) => a.name.localeCompare(b.name, "es"));
+      onChange(items);
+    },
+    onError
+  );
+}
+
+export async function addIngredient(
+  name: string
+): Promise<{ id: string; name: string; created: boolean } | null> {
+  const nameSafe = normalizeName(name);
+  if (!nameSafe) return null;
+
+  const snapshot = await getDocs(collection(db, "ingredients"));
+  const match = snapshot.docs.find((d) => {
+    const stored = d.data().name;
+    return typeof stored === "string" && keyOf(stored) === keyOf(nameSafe);
+  });
+  if (match) {
+    return {
+      id: match.id,
+      name: match.data().name as string,
+      created: false,
+    };
+  }
+
+  const ref = await addDoc(collection(db, "ingredients"), {
+    name: nameSafe,
+    createdAt: serverTimestamp(),
+  });
+  return { id: ref.id, name: nameSafe, created: true };
+}
+
+export async function renameIngredient(
+  id: string,
+  oldName: string,
+  newName: string,
+  dishes: Dish[]
+) {
+  const newNameSafe = normalizeName(newName);
+  if (!newNameSafe || !oldName) return;
+
+  const batch = writeBatch(db);
+  batch.update(doc(db, "ingredients", id), { name: newNameSafe });
+  for (const dish of dishes) {
+    if (dish.ingredients.some((i) => keyOf(i) === keyOf(oldName))) {
+      batch.update(doc(db, "dishes", dish.id), {
+        ingredients: dish.ingredients.map((i) =>
+          keyOf(i) === keyOf(oldName) ? newNameSafe : i
+        ),
+      });
+    }
+  }
+  await batch.commit();
+}
+
+export async function deleteIngredient(id: string, name: string, dishes: Dish[]) {
+  const batch = writeBatch(db);
+  batch.delete(doc(db, "ingredients", id));
+  for (const dish of dishes) {
+    const remaining = dish.ingredients.filter((i) => keyOf(i) !== keyOf(name));
+    if (remaining.length !== dish.ingredients.length) {
+      batch.update(doc(db, "dishes", dish.id), { ingredients: remaining });
+    }
+  }
+  await batch.commit();
+}
+
+export async function saveDish(
+  id: string | null,
+  name: string,
+  ingredients: string[],
+  link = ""
+) {
+  const nameSafe = normalizeName(name);
+  if (!nameSafe) return;
+  const ingredientsSafe = ingredients
+    .map(normalizeName)
+    .filter((i) => i.length > 0);
+  const linkSafe = link.trim();
+
+  if (id) {
+    await updateDoc(doc(db, "dishes", id), {
+      name: nameSafe,
+      ingredients: ingredientsSafe,
+      link: linkSafe,
+    });
+  } else {
+    await addDoc(collection(db, "dishes"), {
+      name: nameSafe,
+      ingredients: ingredientsSafe,
+      link: linkSafe,
+      createdAt: serverTimestamp(),
+    });
+  }
+}
+
+export async function deleteDish(id: string) {
+  await deleteDoc(doc(db, "dishes", id));
+}

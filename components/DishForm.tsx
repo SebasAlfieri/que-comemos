@@ -1,0 +1,126 @@
+"use client";
+
+import { useState } from "react";
+import ChipSelect from "@/components/ChipSelect";
+import {
+  addIngredient,
+  saveDish,
+  type Ingredient,
+  type Dish,
+} from "@/lib/db";
+
+type Props = {
+  initial: Dish | null;
+  ingredients: Ingredient[];
+  onClose: () => void;
+};
+
+export default function DishForm({ initial, ingredients, onClose }: Props) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [link, setLink] = useState(initial?.link ?? "");
+  const [selected, setSelected] = useState<string[]>(initial?.ingredients ?? []);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleCreateIngredient = async (raw: string) => {
+    const result = await addIngredient(raw);
+    if (result) {
+      setSelected((prev) =>
+        prev.some((s) => s.toLowerCase() === result.name.toLowerCase())
+          ? prev
+          : [...prev, result.name]
+      );
+    }
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      setError("Poné un nombre para el platillo.");
+      return;
+    }
+    if (selected.length === 0) {
+      setError("Agregá al menos un ingrediente.");
+      return;
+    }
+    setError(null);
+    setSaving(true);
+    try {
+      await saveDish(initial?.id ?? null, name, selected, link);
+      onClose();
+    } catch {
+      setError("No se pudo guardar. Revisá la conexión.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="drawer-backdrop" onClick={onClose} />
+      <div className="drawer" role="dialog" aria-label="Nuevo platillo">
+        <div className="drawer-header">
+          <h2 className="drawer-title">
+            {initial ? "Editar platillo" : "Nuevo platillo"}
+          </h2>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Cerrar">
+            ✕
+          </button>
+        </div>
+
+        <div className="field">
+          <label className="field-label" htmlFor="dish-name">
+            Nombre
+          </label>
+          <input
+            id="dish-name"
+            className="input"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ej: Milanesa con papas"
+          />
+        </div>
+
+        <div className="field">
+          <label className="field-label" htmlFor="dish-link">
+            Link (opcional)
+          </label>
+          <input
+            id="dish-link"
+            className="input"
+            type="url"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            placeholder="https://…"
+          />
+        </div>
+
+        <div className="field">
+          <label className="field-label">
+            Ingredientes{selected.length > 0 && ` · ${selected.length}`}
+          </label>
+          <ChipSelect
+            options={ingredients.map((i) => i.name)}
+            selected={selected}
+            onChange={setSelected}
+            placeholder="Buscar o crear ingrediente…"
+            onCreate={handleCreateIngredient}
+          />
+        </div>
+
+        {error && <p className="form-error">{error}</p>}
+
+        <div className="btn-row">
+          <button
+            type="button"
+            className="btn btn--accent btn--block"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? "Guardando…" : "Guardar"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
