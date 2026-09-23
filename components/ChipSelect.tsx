@@ -90,6 +90,24 @@ export default function ChipSelect({
   const showCreate =
     onCreate && query.trim().length > 0 && !exactMatch;
 
+  const topMatch = useMemo(() => {
+    const raw = query.trim();
+    if (!raw) return null;
+    return (
+      options.find((o) => keyOf(o) === keyOf(raw)) ?? filtered[0] ?? null
+    );
+  }, [options, filtered, query]);
+
+  const ghostSuffix = useMemo(() => {
+    const top = topMatch;
+    const raw = query.trim();
+    if (!top || !raw) return "";
+    if (top.toLocaleLowerCase().startsWith(raw.toLocaleLowerCase())) {
+      return top.slice(raw.length);
+    }
+    return "";
+  }, [topMatch, query]);
+
   const selectedNames = options.filter((o) => selectedSet.has(keyOf(o)));
   const suggestions = filtered.filter((o) => !selectedSet.has(keyOf(o)));
 
@@ -104,18 +122,26 @@ export default function ChipSelect({
 
   return (
     <div>
-      <input
-        ref={inputRef}
-        className="search"
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        inputMode="text"
-        autoComplete="off"
-        disabled={pending}
-      />
+      <div className="search-ghost-wrap">
+        {ghostSuffix && (
+          <span className="search-ghost" aria-hidden="true">
+            {query}
+            <b>{ghostSuffix}</b>
+          </span>
+        )}
+        <input
+          ref={inputRef}
+          className="search search--ghost"
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          inputMode="text"
+          autoComplete="off"
+          disabled={pending}
+        />
+      </div>
 
       <div className="chips">
         {list.map((option) => {

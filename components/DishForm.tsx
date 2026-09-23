@@ -4,6 +4,7 @@ import { useState } from "react";
 import ChipSelect from "@/components/ChipSelect";
 import {
   addIngredient,
+  dishLinkHref,
   saveDish,
   type Ingredient,
   type Dish,
@@ -85,14 +86,45 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
           <label className="field-label" htmlFor="dish-link">
             Link (opcional)
           </label>
-          <input
-            id="dish-link"
-            className="input"
-            type="url"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-            placeholder="https://…"
-          />
+          <div
+            className="link-row"
+            style={{ display: "flex", gap: "8px" }}
+          >
+            <input
+              id="dish-link"
+              className="input"
+              type="url"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="https://…"
+              style={{ flex: 1 }}
+            />
+            {link.trim().length > 0 && (
+              <a
+                className="link-open"
+                href={dishLinkHref(link)}
+                target="_blank"
+                rel="noreferrer"
+                title="Abrir link"
+                aria-label="Abrir link"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M7 17 17 7" />
+                  <path d="M8 7h9v9" />
+                </svg>
+              </a>
+            )}
+          </div>
         </div>
 
         <div className="field">

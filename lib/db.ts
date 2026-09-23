@@ -45,6 +45,12 @@ export function keyOf(value: string) {
   return normalizeName(value).toLocaleLowerCase();
 }
 
+export function dishLinkHref(link: string) {
+  const trimmed = (link ?? "").trim();
+  if (!trimmed) return "";
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 export function watchIngredients(
   onChange: (items: Ingredient[]) => void,
   onError: (error: unknown) => void

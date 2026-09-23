@@ -5,6 +5,7 @@ import Link from "next/link";
 import ChipSelect from "@/components/ChipSelect";
 import {
   describeFirestoreError,
+  dishLinkHref,
   keyOf,
   watchDishes,
   watchIngredients,
@@ -273,12 +274,6 @@ function DishMatchCard({ match, kind }: { match: Match; kind: "green" | "yellow"
       )}
     </article>
   );
-}
-
-function dishLinkHref(link: string) {
-  const trimmed = link.trim();
-  if (!trimmed) return "";
-  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
 function LoadingState() {

@@ -205,6 +205,47 @@ input {
   border-color: var(--accent);
 }
 
+.search-ghost-wrap {
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s ease;
+}
+
+.search-ghost-wrap:focus-within {
+  border-color: var(--accent);
+}
+
+.search-ghost {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  line-height: 1.2;
+  color: var(--muted);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.search-ghost b {
+  font-weight: 400;
+  opacity: 0.55;
+}
+
+.search--ghost {
+  position: relative;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  font-size: 0.95rem;
+}
+
 /* ---------- Cards ---------- */
 
 .card {
@@ -369,6 +410,31 @@ input {
 
 .icon-btn:hover {
   background: var(--surface-2);
+}
+
+.link-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  flex: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  transition: transform 0.08s ease;
+}
+
+.link-open:hover {
+  color: var(--accent);
+  background: var(--surface-2);
+}
+
+.link-open:active {
+  transform: scale(0.96);
 }
 
 /* ---------- Forms / Drawer ---------- */
