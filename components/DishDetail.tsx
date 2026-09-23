@@ -10,11 +10,14 @@ const CONTACTS = [
 
 type Props = {
   dish: Dish;
+  initialHave?: string[];
   onClose: () => void;
 };
 
-export default function DishDetail({ dish, onClose }: Props) {
-  const [have, setHave] = useState<Set<string>>(() => new Set());
+export default function DishDetail({ dish, initialHave, onClose }: Props) {
+  const [have, setHave] = useState<Set<string>>(
+    () => new Set(initialHave ?? [])
+  );
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [noteItem, setNoteItem] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState("");

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ChipSelect from "@/components/ChipSelect";
+import DishDetail from "@/components/DishDetail";
 import {
   describeFirestoreError,
   dishLinkHref,
@@ -51,6 +52,9 @@ export default function CocinaPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [onlyMarks, setOnlyMarks] = useState(true);
+  const [detail, setDetail] = useState<{ dish: Dish; have: string[] } | null>(
+    null
+  );
 
   useEffect(() => {
     const id = setTimeout(() => setAvailable(loadSelection()), 0);
@@ -233,7 +237,12 @@ export default function CocinaPage() {
                 ✅ Listo para cocinar · {ready.length}
               </h2>
               {ready.map((m) => (
-                <DishMatchCard key={m.dish.id} match={m} kind="green" />
+                <DishMatchCard
+                  key={m.dish.id}
+                  match={m}
+                  kind="green"
+                  onOpen={() => setDetail({ dish: m.dish, have: m.matched })}
+                />
               ))}
             </>
           )}
@@ -244,11 +253,24 @@ export default function CocinaPage() {
                 🧩 Te falta alguno · {partial.length}
               </h2>
               {partial.map((m) => (
-                <DishMatchCard key={m.dish.id} match={m} kind="yellow" />
+                <DishMatchCard
+                  key={m.dish.id}
+                  match={m}
+                  kind="yellow"
+                  onOpen={() => setDetail({ dish: m.dish, have: m.matched })}
+                />
               ))}
             </>
           )}
         </>
+      )}
+
+      {detail && (
+        <DishDetail
+          dish={detail.dish}
+          initialHave={detail.have}
+          onClose={() => setDetail(null)}
+        />
       )}
     </>
   );
@@ -257,12 +279,17 @@ export default function CocinaPage() {
 function DishMatchCard({
   match,
   kind,
+  onOpen,
 }: {
   match: Match;
   kind: "green" | "yellow";
+  onOpen: () => void;
 }) {
   return (
-    <article className={`dish-card dish-card--${kind}`}>
+    <article
+      className={`dish-card dish-card--${kind} dish-card--open`}
+      onClick={onOpen}
+    >
       <div className="dish-head">
         <h3 className="dish-name">{match.dish.name}</h3>
         <span className={`badge badge--${kind}`}>
@@ -290,6 +317,7 @@ function DishMatchCard({
             rel="noreferrer"
             title={`Ver video de ${match.dish.name}`}
             aria-label={`Ver video de ${match.dish.name}`}
+            onClick={(e) => e.stopPropagation()}
           >
             <span className="dish-link-label">Hay videitoo 🎬</span>
           </a>

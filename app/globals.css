@@ -314,6 +314,10 @@ input {
   margin-bottom: 10px;
 }
 
+.dish-card--open {
+  cursor: pointer;
+}
+
 .dish-card--green {
   background: var(--green-soft);
   border-color: var(--green-border);
