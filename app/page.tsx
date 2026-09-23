@@ -36,6 +36,7 @@ export default function CocinaPage() {
   const [available, setAvailable] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [onlyMarks, setOnlyMarks] = useState(true);
 
   useEffect(() => {
     const id = setTimeout(() => setAvailable(loadSelection()), 0);
@@ -128,8 +129,27 @@ export default function CocinaPage() {
       </header>
 
       <section className="card">
-        <div className="field-label">
-          Ingredientes que tengo{available.length > 0 && ` · ${available.length}`}
+        <div
+          className="card-head-row"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "8px",
+            marginBottom: "10px",
+          }}
+        >
+          <div className="field-label" style={{ margin: 0 }}>
+            Ingredientes que tengo
+            {available.length > 0 && ` · ${available.length}`}
+          </div>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => setOnlyMarks((m) => !m)}
+          >
+            {onlyMarks ? "Ver todos" : "Solo marcados"}
+          </button>
         </div>
         {ingredients.length === 0 ? (
           <p>
@@ -145,6 +165,7 @@ export default function CocinaPage() {
             selected={available}
             onChange={setAvailable}
             placeholder="Buscar ingredientes…"
+            onlyMarks={onlyMarks}
           />
         )}
         {available.length > 0 && (

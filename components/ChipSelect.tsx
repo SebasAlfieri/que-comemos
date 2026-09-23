@@ -9,6 +9,7 @@ type Props = {
   onChange: (next: string[]) => void;
   placeholder?: string;
   onCreate?: (name: string) => Promise<void> | void;
+  onlyMarks?: boolean;
 };
 
 export default function ChipSelect({
@@ -17,6 +18,7 @@ export default function ChipSelect({
   onChange,
   placeholder = "Buscar…",
   onCreate,
+  onlyMarks = false,
 }: Props) {
   const [query, setQuery] = useState("");
   const [pending, setPending] = useState(false);
@@ -88,6 +90,18 @@ export default function ChipSelect({
   const showCreate =
     onCreate && query.trim().length > 0 && !exactMatch;
 
+  const selectedNames = options.filter((o) => selectedSet.has(keyOf(o)));
+  const suggestions = filtered.filter((o) => !selectedSet.has(keyOf(o)));
+
+  const list = onlyMarks
+    ? query.trim()
+      ? [...selectedNames, ...suggestions]
+      : selectedNames
+    : filtered;
+  const showEmptyHint = onlyMarks
+    ? list.length === 0
+    : filtered.length === 0 && !showCreate;
+
   return (
     <div>
       <input
@@ -104,7 +118,7 @@ export default function ChipSelect({
       />
 
       <div className="chips">
-        {filtered.map((option) => {
+        {list.map((option) => {
           const selectedChip = selectedSet.has(keyOf(option));
           return (
             <button
@@ -135,8 +149,12 @@ export default function ChipSelect({
             )}
           </button>
         )}
-        {filtered.length === 0 && !showCreate && (
-          <span className="empty-inline">Sin resultados</span>
+        {showEmptyHint && (
+          <span className="empty-inline">
+            {onlyMarks && query.trim().length === 0
+              ? "Escribí para buscar ingredientes…"
+              : "Sin resultados"}
+          </span>
         )}
       </div>
     </div>
