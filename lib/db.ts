@@ -19,6 +19,7 @@ export type Dish = {
   name: string;
   ingredients: string[];
   link?: string;
+  notes?: Record<string, string>;
 };
 
 function capitalizeFirst(value: string) {
@@ -81,6 +82,7 @@ export function watchDishes(
           name: d.data().name as string,
           ingredients: (d.data().ingredients ?? []) as string[],
           link: typeof d.data().link === "string" ? d.data().link : "",
+          notes: (d.data().notes ?? {}) as Record<string, string>,
         }))
         .filter((d) => typeof d.name === "string")
         .sort((a, b) => a.name.localeCompare(b.name, "es"));
@@ -129,10 +131,15 @@ export async function renameIngredient(
   batch.update(doc(db, "ingredients", id), { name: newNameSafe });
   for (const dish of dishes) {
     if (dish.ingredients.some((i) => keyOf(i) === keyOf(oldName))) {
+      const notes: Record<string, string> = {};
+      for (const [key, value] of Object.entries(dish.notes ?? {})) {
+        notes[keyOf(key) === keyOf(oldName) ? newNameSafe : key] = value;
+      }
       batch.update(doc(db, "dishes", dish.id), {
         ingredients: dish.ingredients.map((i) =>
           keyOf(i) === keyOf(oldName) ? newNameSafe : i
         ),
+        notes,
       });
     }
   }
@@ -145,7 +152,14 @@ export async function deleteIngredient(id: string, name: string, dishes: Dish[])
   for (const dish of dishes) {
     const remaining = dish.ingredients.filter((i) => keyOf(i) !== keyOf(name));
     if (remaining.length !== dish.ingredients.length) {
-      batch.update(doc(db, "dishes", dish.id), { ingredients: remaining });
+      const notes: Record<string, string> = {};
+      for (const [key, value] of Object.entries(dish.notes ?? {})) {
+        if (keyOf(key) !== keyOf(name)) notes[key] = value;
+      }
+      batch.update(doc(db, "dishes", dish.id), {
+        ingredients: remaining,
+        notes,
+      });
     }
   }
   await batch.commit();
@@ -155,7 +169,8 @@ export async function saveDish(
   id: string | null,
   name: string,
   ingredients: string[],
-  link = ""
+  link = "",
+  notes: Record<string, string> = {}
 ) {
   const nameSafe = normalizeName(name);
   if (!nameSafe) return;
@@ -164,17 +179,26 @@ export async function saveDish(
     .filter((i) => i.length > 0);
   const linkSafe = link.trim();
 
+  const notesSafe: Record<string, string> = {};
+  for (const ing of ingredientsSafe) {
+    const entry = Object.entries(notes).find(([k]) => keyOf(k) === keyOf(ing));
+    const value = (entry?.[1] ?? "").trim();
+    if (value) notesSafe[ing] = value;
+  }
+
   if (id) {
     await updateDoc(doc(db, "dishes", id), {
       name: nameSafe,
       ingredients: ingredientsSafe,
       link: linkSafe,
+      notes: notesSafe,
     });
   } else {
     await addDoc(collection(db, "dishes"), {
       name: nameSafe,
       ingredients: ingredientsSafe,
       link: linkSafe,
+      notes: notesSafe,
       createdAt: serverTimestamp(),
     });
   }

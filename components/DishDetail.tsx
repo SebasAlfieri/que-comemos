@@ -18,7 +18,9 @@ export default function DishDetail({ dish, initialHave, onClose }: Props) {
   const [have, setHave] = useState<Set<string>>(
     () => new Set(initialHave ?? [])
   );
-  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [notes, setNotes] = useState<Record<string, string>>(
+    () => ({ ...(dish.notes ?? {}) })
+  );
   const [noteItem, setNoteItem] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
   const pressTimer = useRef<number | null>(null);

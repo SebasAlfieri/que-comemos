@@ -14,8 +14,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "¿Qué comemos?",
-  description: "Descubrí qué cocinar con lo que tenés en la heladera, para vos y tu pareja.",
+  title: "¿Qué comemos Beluu?",
+  description: "Que mierda comemos?!?!?",
+  openGraph: {
+    type: "website",
+    siteName: "¿Qué Comemos?",
+    images: [
+      {
+        url: "/opengraph.png",
+        width: 1080,
+        height: 1080,
+        alt: "belulita",
+      },
+    ],
+  },
 };
 
 export const viewport: Viewport = {

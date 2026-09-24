@@ -6,6 +6,7 @@ import {
   addIngredient,
   deleteDish,
   dishLinkHref,
+  keyOf,
   saveDish,
   type Ingredient,
   type Dish,
@@ -21,6 +22,9 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
   const [name, setName] = useState(initial?.name ?? "");
   const [link, setLink] = useState(initial?.link ?? "");
   const [selected, setSelected] = useState<string[]>(initial?.ingredients ?? []);
+  const [notes, setNotes] = useState<Record<string, string>>(
+    () => ({ ...(initial?.notes ?? {}) })
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -48,6 +52,28 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
     }
   };
 
+  const handleSelectChange = (next: string[]) => {
+    setSelected(next);
+    setNotes((prev) => {
+      const kept: Record<string, string> = {};
+      for (const n of next) {
+        const matchKey = Object.keys(prev).find((k) => keyOf(k) === keyOf(n));
+        if (matchKey) kept[n] = prev[matchKey];
+      }
+      return kept;
+    });
+  };
+
+  const setNote = (item: string, value: string) => {
+    setNotes((prev) => {
+      const next = { ...prev };
+      const key = Object.keys(prev).find((k) => keyOf(k) === keyOf(item)) ?? item;
+      if (value.trim()) next[key] = value;
+      else delete next[key];
+      return next;
+    });
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
       setError("Poné un nombre para el platillo.");
@@ -60,7 +86,7 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
     setError(null);
     setSaving(true);
     try {
-      await saveDish(initial?.id ?? null, name, selected, link);
+      await saveDish(initial?.id ?? null, name, selected, link, notes);
       onClose();
     } catch {
       setError("No se pudo guardar. Revisá la conexión.");
@@ -145,13 +171,20 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
           <label className="field-label">
             Ingredientes{selected.length > 0 && ` · ${selected.length}`}
           </label>
+          {selected.length > 0 && (
+            <p className="field-hint">
+              Mantené apretado un ingrediente para agregar nota.
+            </p>
+          )}
           <ChipSelect
             options={ingredients.map((i) => i.name)}
             selected={selected}
-            onChange={setSelected}
+            onChange={handleSelectChange}
             placeholder="Buscar o crear ingrediente…"
             onCreate={handleCreateIngredient}
             onlyMarks
+            notes={notes}
+            onNoteChange={setNote}
           />
         </div>
 

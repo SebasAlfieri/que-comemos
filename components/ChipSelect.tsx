@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
 import { keyOf } from "@/lib/db";
 
 type Props = {
@@ -10,6 +11,8 @@ type Props = {
   placeholder?: string;
   onCreate?: (name: string) => Promise<void> | void;
   onlyMarks?: boolean;
+  notes?: Record<string, string>;
+  onNoteChange?: (item: string, note: string) => void;
 };
 
 export default function ChipSelect({
@@ -19,10 +22,26 @@ export default function ChipSelect({
   placeholder = "Buscar…",
   onCreate,
   onlyMarks = false,
+  notes,
+  onNoteChange,
 }: Props) {
   const [query, setQuery] = useState("");
   const [pending, setPending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const noteEnabled = Boolean(onNoteChange);
+  const longPressRef = useRef(false);
+  const pressTimerRef = useRef<number | null>(null);
+  const [noteItem, setNoteItem] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (pressTimerRef.current !== null) {
+        window.clearTimeout(pressTimerRef.current);
+        pressTimerRef.current = null;
+      }
+    };
+  }, []);
   const selectedSet = useMemo(
     () => new Set(selected.map(keyOf)),
     [selected]
@@ -44,6 +63,49 @@ export default function ChipSelect({
     const exists = selected.find((s) => keyOf(s) === key);
     onChange(exists ? selected.filter((s) => s !== exists) : [...selected, value]);
   };
+
+  const startPress = (option: string) => {
+    if (!noteEnabled) return;
+    longPressRef.current = false;
+    if (pressTimerRef.current !== null) {
+      window.clearTimeout(pressTimerRef.current);
+    }
+    pressTimerRef.current = window.setTimeout(() => {
+      longPressRef.current = true;
+      setNoteDraft(notes?.[option] ?? "");
+      setNoteItem(option);
+    }, 600);
+  };
+
+  const clearPress = () => {
+    if (pressTimerRef.current !== null) {
+      window.clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+
+  const handleChipClick = (option: string) => {
+    if (longPressRef.current) {
+      longPressRef.current = false;
+      return;
+    }
+    toggle(option);
+  };
+
+  const saveNote = () => {
+    if (!noteItem) return;
+    const value = noteDraft.trim();
+    onNoteChange?.(noteItem, value);
+    setNoteItem(null);
+  };
+
+  const removeNote = () => {
+    if (!noteItem) return;
+    onNoteChange?.(noteItem, "");
+    setNoteItem(null);
+  };
+
+  const closeNote = () => setNoteItem(null);
 
   const mark = (value: string) => {
     if (!selected.some((s) => keyOf(s) === keyOf(value))) {
@@ -121,8 +183,9 @@ export default function ChipSelect({
     : filtered.length === 0 && !showCreate;
 
   return (
-    <div>
-      <div className="search-ghost-wrap">
+    <>
+      <div>
+        <div className="search-ghost-wrap">
         {ghostSuffix && (
           <span className="search-ghost" aria-hidden="true">
             {query}
@@ -146,16 +209,35 @@ export default function ChipSelect({
       <div className="chips">
         {list.map((option) => {
           const selectedChip = selectedSet.has(keyOf(option));
+          const canNote = noteEnabled && selectedChip;
           return (
-            <button
+            <span
               key={keyOf(option)}
-              type="button"
-              className={`chip${selectedChip ? " chip--selected" : ""}`}
-              onClick={() => toggle(option)}
-              aria-pressed={selectedChip}
+              className={canNote ? "chip-cell" : undefined}
             >
-              {option}
-            </button>
+              <button
+                type="button"
+                className={`chip${selectedChip ? " chip--selected" : ""}`}
+                onClick={() => handleChipClick(option)}
+                onPointerDown={canNote ? () => startPress(option) : undefined}
+                onPointerUp={canNote ? clearPress : undefined}
+                onPointerLeave={canNote ? clearPress : undefined}
+                onPointerCancel={canNote ? clearPress : undefined}
+                onContextMenu={
+                  canNote ? (e) => e.preventDefault() : undefined
+                }
+                aria-pressed={selectedChip}
+              >
+                {option}
+              </button>
+              {canNote && (
+                <span className="chip-note-row">
+                  {notes?.[option] && (
+                    <span className="chip-note">{notes[option]}</span>
+                  )}
+                </span>
+              )}
+            </span>
           );
         })}
         {showCreate && (
@@ -184,5 +266,52 @@ export default function ChipSelect({
         )}
       </div>
     </div>
+
+    {noteItem &&
+      createPortal(
+        <div className="modal-backdrop" onClick={closeNote}>
+          <div
+            className="modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-label={`Nota para ${noteItem}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="modal-title">Nota para «{noteItem}»</p>
+            <p className="modal-text">
+              Agregá una nota para este ingrediente en la lista de compras.
+            </p>
+            <input
+              className="input"
+              type="text"
+              placeholder="300g"
+              value={noteDraft}
+              onChange={(e) => setNoteDraft(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveNote();
+              }}
+            />
+            <div className="modal-actions" style={{ marginTop: 14 }}>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={removeNote}
+              >
+                Eliminar
+              </button>
+              <button
+                type="button"
+                className="btn btn--accent"
+                onClick={saveNote}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
