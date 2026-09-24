@@ -12,6 +12,18 @@ import {
   writeBatch,
 } from "firebase/firestore";
 
+export type Effort = "green" | "yellow" | "red";
+
+export const EFFORTS: { value: Effort; label: string }[] = [
+  { value: "green", label: "Bajo" },
+  { value: "yellow", label: "Medio" },
+  { value: "red", label: "Alto" },
+];
+
+export function isEffort(value: unknown): value is Effort {
+  return value === "green" || value === "yellow" || value === "red";
+}
+
 export type Ingredient = { id: string; name: string };
 
 export type Dish = {
@@ -20,6 +32,7 @@ export type Dish = {
   ingredients: string[];
   link?: string;
   notes?: Record<string, string>;
+  effort?: Effort;
 };
 
 function capitalizeFirst(value: string) {
@@ -83,6 +96,7 @@ export function watchDishes(
           ingredients: (d.data().ingredients ?? []) as string[],
           link: typeof d.data().link === "string" ? d.data().link : "",
           notes: (d.data().notes ?? {}) as Record<string, string>,
+          effort: isEffort(d.data().effort) ? d.data().effort : undefined,
         }))
         .filter((d) => typeof d.name === "string")
         .sort((a, b) => a.name.localeCompare(b.name, "es"));
@@ -170,7 +184,8 @@ export async function saveDish(
   name: string,
   ingredients: string[],
   link = "",
-  notes: Record<string, string> = {}
+  notes: Record<string, string> = {},
+  effort: Effort | undefined = undefined
 ) {
   const nameSafe = normalizeName(name);
   if (!nameSafe) return;
@@ -186,12 +201,15 @@ export async function saveDish(
     if (value) notesSafe[ing] = value;
   }
 
+  const effortSafe = effort ? (isEffort(effort) ? effort : undefined) : undefined;
+
   if (id) {
     await updateDoc(doc(db, "dishes", id), {
       name: nameSafe,
       ingredients: ingredientsSafe,
       link: linkSafe,
       notes: notesSafe,
+      effort: effortSafe ?? null,
     });
   } else {
     await addDoc(collection(db, "dishes"), {
@@ -199,6 +217,7 @@ export async function saveDish(
       ingredients: ingredientsSafe,
       link: linkSafe,
       notes: notesSafe,
+      effort: effortSafe ?? null,
       createdAt: serverTimestamp(),
     });
   }

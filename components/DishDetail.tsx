@@ -160,7 +160,7 @@ export default function DishDetail({ dish, initialHave, onClose }: Props) {
         <div className="field">
           <label className="field-label">¿Qué ya tenemos?</label>
           {dish.ingredients.length > 0 && (
-            <p className="field-hint">
+            <p className="field-hint field-hint--note">
               Mantené apretado un ingrediente para agregar nota.
             </p>
           )}

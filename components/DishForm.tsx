@@ -6,8 +6,10 @@ import {
   addIngredient,
   deleteDish,
   dishLinkHref,
+  EFFORTS,
   keyOf,
   saveDish,
+  type Effort,
   type Ingredient,
   type Dish,
 } from "@/lib/db";
@@ -22,6 +24,7 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
   const [name, setName] = useState(initial?.name ?? "");
   const [link, setLink] = useState(initial?.link ?? "");
   const [selected, setSelected] = useState<string[]>(initial?.ingredients ?? []);
+  const [effort, setEffort] = useState<Effort | "">(initial?.effort ?? "");
   const [notes, setNotes] = useState<Record<string, string>>(
     () => ({ ...(initial?.notes ?? {}) })
   );
@@ -86,7 +89,7 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
     setError(null);
     setSaving(true);
     try {
-      await saveDish(initial?.id ?? null, name, selected, link, notes);
+      await saveDish(initial?.id ?? null, name, selected, link, notes, effort || undefined);
       onClose();
     } catch {
       setError("No se pudo guardar. Revisá la conexión.");
@@ -167,12 +170,30 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
           </div>
         </div>
 
+        <div className="field field--effort">
+          <label className="field-label">Esfuerzo</label>
+          <div className="chips">
+            {EFFORTS.map((e) => (
+              <button
+                key={e.value}
+                type="button"
+                className={`chip chip-btn${effort === e.value ? " chip--selected" : ""}`}
+                onClick={() => setEffort(e.value)}
+                aria-pressed={effort === e.value}
+              >
+                <span className={`effort-dot effort--${e.value}`} />
+                {e.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="field">
           <label className="field-label">
             Ingredientes{selected.length > 0 && ` · ${selected.length}`}
           </label>
           {selected.length > 0 && (
-            <p className="field-hint">
+            <p className="field-hint field-hint--note">
               Mantené apretado un ingrediente para agregar nota.
             </p>
           )}

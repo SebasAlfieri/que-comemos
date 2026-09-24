@@ -5,9 +5,11 @@ import DishDetail from "@/components/DishDetail";
 import DishForm from "@/components/DishForm";
 import {
   dishLinkHref,
+  EFFORTS,
   watchDishes,
   watchIngredients,
   type Dish,
+  type Effort,
   type Ingredient,
 } from "@/lib/db";
 
@@ -22,6 +24,7 @@ export default function PlatillosPage() {
   const [randomOpen, setRandomOpen] = useState(false);
   const [randomThree, setRandomThree] = useState<Dish[]>([]);
   const [query, setQuery] = useState("");
+  const [effortFilter, setEffortFilter] = useState<Effort | "all">("all");
 
   useEffect(() => {
     const unDishes = watchDishes(
@@ -77,11 +80,15 @@ export default function PlatillosPage() {
   const queryLower = query.trim().toLocaleLowerCase();
 
   const visible = useMemo(() => {
-    if (!queryLower) return dishes;
-    return dishes.filter((d) =>
-      d.name.toLocaleLowerCase().includes(queryLower)
-    );
-  }, [dishes, queryLower]);
+    if (!queryLower && effortFilter === "all") return dishes;
+    return dishes.filter((d) => {
+      if (queryLower && !d.name.toLocaleLowerCase().includes(queryLower)) {
+        return false;
+      }
+      if (effortFilter !== "all" && d.effort !== effortFilter) return false;
+      return true;
+    });
+  }, [dishes, queryLower, effortFilter]);
 
   if (loading) {
     return (
@@ -124,6 +131,34 @@ export default function PlatillosPage() {
         />
       </div>
 
+{dishes.length > 0 && (
+        <div style={{ margin: "0 0 12px" }}>
+          <span className="field-label">Esfuerzo</span>
+          <div className="chips" style={{ margin: 0 }}>
+            <button
+              type="button"
+              className={`chip${effortFilter === "all" ? " chip--selected" : ""}`}
+              onClick={() => setEffortFilter("all")}
+              aria-pressed={effortFilter === "all"}
+            >
+              Todos
+            </button>
+            {EFFORTS.map((e) => (
+              <button
+                key={e.value}
+                type="button"
+                className={`chip${effortFilter === e.value ? ` chip--effort-selected effort-selected--${e.value}` : ""}`}
+                onClick={() => setEffortFilter(e.value)}
+                aria-pressed={effortFilter === e.value}
+              >
+                <span className={`effort-dot effort--${e.value}`} />
+                {e.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="error-box">
           <p className="error-box-title">⚠️ Sin conexión a la base</p>
@@ -147,7 +182,7 @@ export default function PlatillosPage() {
         visible.map((dish) => (
           <article
             key={dish.id}
-            className="list-item list-item--open"
+            className={`list-item list-item--open${dish.effort ? ` list-item-effort--${dish.effort}` : ""}`}
             onClick={() => setDetail(dish)}
           >
             <div className="list-item-name">{dish.name}</div>
@@ -233,7 +268,7 @@ export default function PlatillosPage() {
                 <button
                   key={dish.id}
                   type="button"
-                  className="random-item"
+                  className={`random-item${dish.effort ? ` list-item-effort--${dish.effort}` : ""}`}
                   onClick={() => {
                     setRandomOpen(false);
                     setDetail(dish);

@@ -401,14 +401,14 @@ export default function IngredientesPage() {
             ) : (
               <div className="dish-modal-list">
                 {dishItems.map((dish) => (
-                  <article
-                    key={dish.id}
-                    className="list-item list-item--open"
-                    onClick={() => {
-                      setDishModal(null);
-                      setDetail(dish);
-                    }}
-                  >
+<article
+                  key={dish.id}
+                  className={`list-item list-item--open${dish.effort ? ` list-item-effort--${dish.effort}` : ""}`}
+                  onClick={() => {
+                    setDishModal(null);
+                    setDetail(dish);
+                  }}
+                >
                     <div className="list-item-name">{dish.name}</div>
                     {dish.link && (
                       <a

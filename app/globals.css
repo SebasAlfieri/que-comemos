@@ -176,6 +176,23 @@ input {
   box-shadow: none;
 }
 
+.chip--effort-selected {
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+
+.chip--effort-selected.effort-selected--green {
+  border-color: var(--green);
+}
+
+.chip--effort-selected.effort-selected--yellow {
+  border-color: var(--yellow);
+}
+
+.chip--effort-selected.effort-selected--red {
+  border-color: var(--danger);
+}
+
 .chip--have {
   background: var(--surface-2);
   border-color: var(--green-border);
@@ -412,6 +429,33 @@ select,
   color: #fff;
 }
 
+.effort-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.effort--green {
+  background-color: var(--green);
+}
+
+.effort--yellow {
+  background-color: var(--yellow);
+}
+
+.effort--red {
+  background-color: var(--danger);
+}
+
+.effort--yellow {
+  background-color: var(--yellow);
+}
+
+.effort--red {
+  background-color: var(--danger);
+}
+
 /* ---------- Buttons ---------- */
 
 .btn {
@@ -507,6 +551,11 @@ select,
   margin: 8px 2px 0;
 }
 
+.field-hint--note {
+  font-style: italic;
+  margin-bottom: 5px;
+}
+
 .detail-controls {
   display: flex;
   gap: 8px;
@@ -598,6 +647,10 @@ select,
 
 .field + .field {
   margin-top: 14px;
+}
+
+.field--effort {
+  margin-bottom: 10px;
 }
 
 .form-error {
@@ -752,6 +805,18 @@ select,
   box-shadow: var(--shadow);
   padding: 12px 14px;
   margin-bottom: 10px;
+}
+
+.list-item-effort--green {
+  border-bottom: 1px solid var(--green);
+}
+
+.list-item-effort--yellow {
+  border-bottom: 1px solid var(--yellow);
+}
+
+.list-item-effort--red {
+  border-bottom: 1px solid var(--danger);
 }
 
 .list-item--match {
