@@ -57,6 +57,14 @@ html {
   height: 100%;
 }
 
+/* Scrollbar visible y estable (solo desktop): no cambia el ancho del viewport */
+@media (min-width: 768px) and (pointer: fine) {
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+}
+
 html,
 body {
   max-width: 100vw;
@@ -879,7 +887,7 @@ input:disabled {
   transform: translateX(-50%);
   bottom: 0;
   width: 100%;
-  max-width: 480px;
+  /* max-width: 480px; */
   background: var(--surface);
   border-top: 1px solid var(--border);
   backdrop-filter: blur(12px);
