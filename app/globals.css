@@ -667,10 +667,19 @@ select,
   animation: pop-in 0.18s ease;
 }
 
+.modal--wide {
+  max-width: 360px;
+}
+
 .modal-title {
   font-size: 1.02rem;
   font-weight: 700;
   margin-bottom: 6px;
+}
+
+.modal-title--center {
+  text-align: center;
+  margin-bottom: 15px;
 }
 
 .modal-text {
@@ -686,6 +695,16 @@ select,
 
 .modal-actions .btn {
   flex: 1;
+}
+
+.dish-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dish-modal-list .list-item {
+  margin-bottom: 0;
 }
 
 .random-list {

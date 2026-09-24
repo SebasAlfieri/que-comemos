@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import DishDetail from "@/components/DishDetail";
 import {
   addIngredient,
   deleteIngredient,
   describeFirestoreError,
+  dishLinkHref,
   keyOf,
   renameIngredient,
   watchDishes,
@@ -32,7 +34,7 @@ export default function IngredientesPage() {
       (err) => {
         setError(describeFirestoreError(err));
         setLoading(false);
-      }
+      },
     );
     const unDishes = watchDishes(
       (items) => {
@@ -42,7 +44,7 @@ export default function IngredientesPage() {
       (err) => {
         setError(describeFirestoreError(err));
         setLoading(false);
-      }
+      },
     );
     return () => {
       unIngredients();
@@ -55,8 +57,8 @@ export default function IngredientesPage() {
     if (!ing) return 0;
     return dishes.filter((d) =>
       d.ingredients.some(
-        (n) => n.toLocaleLowerCase() === ing.name.toLocaleLowerCase()
-      )
+        (n) => n.toLocaleLowerCase() === ing.name.toLocaleLowerCase(),
+      ),
     ).length;
   };
 
@@ -75,7 +77,7 @@ export default function IngredientesPage() {
     }
     const base = queryLower
       ? ingredients.filter((i) =>
-          i.name.toLocaleLowerCase().includes(queryLower)
+          i.name.toLocaleLowerCase().includes(queryLower),
         )
       : ingredients;
     return [...base].sort((a, b) => {
@@ -131,6 +133,13 @@ export default function IngredientesPage() {
       closeRename();
       return;
     }
+    const duplicate = ingredients.find(
+      (i) => i.id !== renaming.id && keyOf(i.name) === keyOf(trimmed)
+    );
+    if (duplicate) {
+      setRenameError(`Ya existe «${duplicate.name}». Elegí otro nombre.`);
+      return;
+    }
     setRenameSaving(true);
     setRenameError(null);
     try {
@@ -157,6 +166,17 @@ export default function IngredientesPage() {
     }
   };
 
+  const dishesWith = (item: Ingredient) =>
+    dishes.filter((d) =>
+      d.ingredients.some(
+        (n) => n.toLocaleLowerCase() === item.name.toLocaleLowerCase(),
+      ),
+    );
+
+  const [dishModal, setDishModal] = useState<Ingredient | null>(null);
+  const [detail, setDetail] = useState<Dish | null>(null);
+  const dishItems = dishModal ? dishesWith(dishModal) : [];
+
   if (loading) {
     return (
       <div className="loading">
@@ -175,7 +195,10 @@ export default function IngredientesPage() {
         </p>
       </header>
 
-      <div className="input-row" style={{ display: "flex", gap: "8px", margin: "16px 0" }}>
+      <div
+        className="input-row"
+        style={{ display: "flex", gap: "8px", margin: "16px 0" }}
+      >
         <input
           ref={inputRef}
           className="input"
@@ -261,12 +284,12 @@ export default function IngredientesPage() {
       ) : (
         visible.map((item) => {
           const isExact =
-            queryLower.length > 0 &&
-            keyOf(item.name) === keyOf(newName);
+            queryLower.length > 0 && keyOf(item.name) === keyOf(newName);
           return (
             <article
               key={item.id}
-              className={`list-item${isExact ? " list-item--match" : ""}`}
+              className={`list-item list-item--open${isExact ? " list-item--match" : ""}`}
+              onClick={() => setDishModal(item)}
             >
               <div className="list-item-name">{item.name}</div>
               <span className="count-pill">
@@ -276,7 +299,10 @@ export default function IngredientesPage() {
                 <button
                   type="button"
                   className="icon-btn"
-                  onClick={() => openRename(item)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openRename(item);
+                  }}
                   aria-label={`Renombrar ${item.name}`}
                 >
                   ✏️
@@ -284,7 +310,10 @@ export default function IngredientesPage() {
                 <button
                   type="button"
                   className="icon-btn"
-                  onClick={() => handleDelete(item)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(item);
+                  }}
                   aria-label={`Eliminar ${item.name}`}
                 >
                   🗑️
@@ -298,7 +327,11 @@ export default function IngredientesPage() {
       {renaming && (
         <>
           <div className="drawer-backdrop" onClick={closeRename} />
-          <div className="drawer" role="dialog" aria-label="Renombrar ingrediente">
+          <div
+            className="drawer"
+            role="dialog"
+            aria-label="Renombrar ingrediente"
+          >
             <div className="drawer-header">
               <h2 className="drawer-title">Renombrar ingrediente</h2>
               <button
@@ -339,6 +372,69 @@ export default function IngredientesPage() {
           </div>
         </>
       )}
+
+      {dishModal && (
+        <div className="modal-backdrop" onClick={() => setDishModal(null)}>
+          <div
+            className="modal modal--wide"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Platillos con ${dishModal.name}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="modal-title modal-title--center">
+              🍅 <u>{dishModal.name}</u> 🍅
+            </p>
+            {/* <p className="modal-text">Presente en...</p> */}
+            {dishItems.length === 0 ? (
+              <p className="modal-text">
+                Ningún platillo usa este ingrediente aún.
+              </p>
+            ) : (
+              <div className="dish-modal-list">
+                {dishItems.map((dish) => (
+                  <article
+                    key={dish.id}
+                    className="list-item list-item--open"
+                    onClick={() => {
+                      setDishModal(null);
+                      setDetail(dish);
+                    }}
+                  >
+                    <div className="list-item-name">{dish.name}</div>
+                    {dish.link && (
+                      <a
+                        className="play-btn"
+                        href={dishLinkHref(dish.link)}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={`Ver video de ${dish.name}`}
+                        aria-label={`Ver video de ${dish.name}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="9"
+                          height="9"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </a>
+                    )}
+                    <span className="count-pill count-pill--num">
+                      {dish.ingredients.length}
+                    </span>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {detail && <DishDetail dish={detail} onClose={() => setDetail(null)} />}
     </>
   );
 }

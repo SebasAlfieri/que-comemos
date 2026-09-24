@@ -188,7 +188,7 @@ dishes.map((dish) => (
       {randomOpen && (
         <div className="modal-backdrop" onClick={() => setRandomOpen(false)}>
           <div
-            className="modal"
+            className="modal modal--wide"
             role="dialog"
             aria-modal="true"
             aria-label="Elegir al azar"

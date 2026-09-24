@@ -16,11 +16,11 @@ type Props = {
 
 export default function DishDetail({ dish, initialHave, onClose }: Props) {
   const [have, setHave] = useState<Set<string>>(
-    () => new Set(initialHave ?? [])
+    () => new Set(initialHave ?? []),
   );
-  const [notes, setNotes] = useState<Record<string, string>>(
-    () => ({ ...(dish.notes ?? {}) })
-  );
+  const [notes, setNotes] = useState<Record<string, string>>(() => ({
+    ...(dish.notes ?? {}),
+  }));
   const [noteItem, setNoteItem] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
   const pressTimer = useRef<number | null>(null);
@@ -184,7 +184,9 @@ export default function DishDetail({ dish, initialHave, onClose }: Props) {
                   {item}
                 </button>
                 <span className="chip-note-row">
-                  {notes[item] && <span className="chip-note">{notes[item]}</span>}
+                  {notes[item] && (
+                    <span className="chip-note">{notes[item]}</span>
+                  )}
                 </span>
               </span>
             ))}
@@ -204,7 +206,6 @@ export default function DishDetail({ dish, initialHave, onClose }: Props) {
           ))}
         </div>
       </div>
-
       {noteItem && (
         <div className="modal-backdrop" onClick={closeNote}>
           <div
