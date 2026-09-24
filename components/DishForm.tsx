@@ -25,6 +25,24 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
   const [link, setLink] = useState(initial?.link ?? "");
   const [selected, setSelected] = useState<string[]>(initial?.ingredients ?? []);
   const [effort, setEffort] = useState<Effort | "">(initial?.effort ?? "");
+  const [dishNote, setDishNote] = useState(initial?.note ?? "");
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+
+  const openNoteModal = () => {
+    setNoteDraft(dishNote);
+    setNoteOpen(true);
+  };
+
+  const saveNoteModal = () => {
+    setDishNote(noteDraft.trim());
+    setNoteOpen(false);
+  };
+
+  const removeNoteModal = () => {
+    setDishNote("");
+    setNoteOpen(false);
+  };
   const [notes, setNotes] = useState<Record<string, string>>(
     () => ({ ...(initial?.notes ?? {}) })
   );
@@ -89,7 +107,7 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
     setError(null);
     setSaving(true);
     try {
-      await saveDish(initial?.id ?? null, name, selected, link, notes, effort || undefined);
+      await saveDish(initial?.id ?? null, name, selected, link, notes, effort || undefined, dishNote);
       onClose();
     } catch {
       setError("No se pudo guardar. Revisá la conexión.");
@@ -115,14 +133,44 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
           <label className="field-label" htmlFor="dish-name">
             Nombre
           </label>
-          <input
-            id="dish-name"
-            className="input"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ej: Milanesa con papas"
-          />
+          <div
+            className="link-row"
+            style={{ display: "flex", gap: "8px" }}
+          >
+            <input
+              id="dish-name"
+              className="input"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: Milanesa con papas"
+              style={{ flex: 1 }}
+            />
+            <button
+              type="button"
+              className={`link-open${dishNote ? " link-open--active" : ""}`}
+              onClick={openNoteModal}
+              aria-label="Agregar o editar nota"
+              title="Agregar o editar nota"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <path d="M14 2v6h6" />
+                <path d="M16 13H8" />
+                <path d="M16 17H8" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="field">
@@ -264,6 +312,50 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
                 disabled={saving}
               >
                 {saving ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {noteOpen && (
+        <div className="modal-backdrop" onClick={() => setNoteOpen(false)}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Nota del platillo"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="modal-title">Nota del platillo</p>
+            <p className="modal-text">
+              Se muestra en la card del platillo. Opcional.
+            </p>
+            <input
+              className="input"
+              type="text"
+              placeholder="Ej: va bien con puré"
+              value={noteDraft}
+              onChange={(e) => setNoteDraft(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveNoteModal();
+              }}
+            />
+            <div className="modal-actions" style={{ marginTop: 14 }}>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={removeNoteModal}
+              >
+                Eliminar
+              </button>
+              <button
+                type="button"
+                className="btn btn--accent"
+                onClick={saveNoteModal}
+              >
+                Guardar
               </button>
             </div>
           </div>

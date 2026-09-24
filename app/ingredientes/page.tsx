@@ -409,7 +409,10 @@ export default function IngredientesPage() {
                     setDetail(dish);
                   }}
                 >
-                    <div className="list-item-name">{dish.name}</div>
+                    <div className="list-item-main">
+                      <div className="list-item-name">{dish.name}</div>
+                      {dish.note && <span className="dish-note">{dish.note}</span>}
+                    </div>
                     {dish.link && (
                       <a
                         className="play-btn"

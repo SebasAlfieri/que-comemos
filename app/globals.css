@@ -620,6 +620,11 @@ select,
   transform: scale(0.96);
 }
 
+.link-open--active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* ---------- Forms / Drawer ---------- */
 
 .input {
@@ -805,6 +810,27 @@ select,
   box-shadow: var(--shadow);
   padding: 12px 14px;
   margin-bottom: 10px;
+}
+
+.list-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dish-note {
+  margin-top: 0;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dish-note::first-letter {
+  text-transform: uppercase;
 }
 
 .list-item-effort--green {

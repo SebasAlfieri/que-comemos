@@ -32,6 +32,7 @@ export type Dish = {
   ingredients: string[];
   link?: string;
   notes?: Record<string, string>;
+  note?: string;
   effort?: Effort;
 };
 
@@ -96,6 +97,7 @@ export function watchDishes(
           ingredients: (d.data().ingredients ?? []) as string[],
           link: typeof d.data().link === "string" ? d.data().link : "",
           notes: (d.data().notes ?? {}) as Record<string, string>,
+          note: typeof d.data().note === "string" ? d.data().note : "",
           effort: isEffort(d.data().effort) ? d.data().effort : undefined,
         }))
         .filter((d) => typeof d.name === "string")
@@ -185,7 +187,8 @@ export async function saveDish(
   ingredients: string[],
   link = "",
   notes: Record<string, string> = {},
-  effort: Effort | undefined = undefined
+  effort: Effort | undefined = undefined,
+  note = ""
 ) {
   const nameSafe = normalizeName(name);
   if (!nameSafe) return;
@@ -202,6 +205,7 @@ export async function saveDish(
   }
 
   const effortSafe = effort ? (isEffort(effort) ? effort : undefined) : undefined;
+  const noteSafe = note.trim();
 
   if (id) {
     await updateDoc(doc(db, "dishes", id), {
@@ -210,6 +214,7 @@ export async function saveDish(
       link: linkSafe,
       notes: notesSafe,
       effort: effortSafe ?? null,
+      note: noteSafe || null,
     });
   } else {
     await addDoc(collection(db, "dishes"), {
@@ -218,6 +223,7 @@ export async function saveDish(
       link: linkSafe,
       notes: notesSafe,
       effort: effortSafe ?? null,
+      note: noteSafe || null,
       createdAt: serverTimestamp(),
     });
   }

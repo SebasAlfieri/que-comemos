@@ -185,7 +185,10 @@ export default function PlatillosPage() {
             className={`list-item list-item--open${dish.effort ? ` list-item-effort--${dish.effort}` : ""}`}
             onClick={() => setDetail(dish)}
           >
-            <div className="list-item-name">{dish.name}</div>
+            <div className="list-item-main">
+              <div className="list-item-name">{dish.name}</div>
+              {dish.note && <span className="dish-note">{dish.note}</span>}
+            </div>
             {dish.link && (
               <a
                 className="play-btn"
@@ -274,7 +277,10 @@ export default function PlatillosPage() {
                     setDetail(dish);
                   }}
                 >
-                  <span>{dish.name}</span>
+                  <span className="list-item-main">
+                    <span>{dish.name}</span>
+                    {dish.note && <span className="dish-note">{dish.note}</span>}
+                  </span>
                   <span className="count-pill count-pill--num">
                     {dish.ingredients.length}
                   </span>
