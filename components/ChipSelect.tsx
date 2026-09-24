@@ -253,7 +253,9 @@ export default function ChipSelect({
                 Agregando…
               </>
             ) : (
-              `+ Crear «${query.trim()}»`
+              <>
+                + Crear <u>{query.trim()}</u>
+              </>
             )}
           </button>
         )}
@@ -277,7 +279,7 @@ export default function ChipSelect({
             aria-label={`Nota para ${noteItem}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="modal-title">Nota para «{noteItem}»</p>
+            <p className="modal-title">Nota para <u>{noteItem}</u></p>
             <p className="modal-text">
               Agregá una nota para este ingrediente en la lista de compras.
             </p>

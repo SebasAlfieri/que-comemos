@@ -225,7 +225,7 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
             aria-label="Eliminar platillo"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="modal-title">¿Eliminar «{initial.name}»?</p>
+            <p className="modal-title">¿Eliminar <u>{initial.name}</u>?</p>
             <p className="modal-text">Esta acción no se puede deshacer.</p>
             <div className="modal-actions">
               <button

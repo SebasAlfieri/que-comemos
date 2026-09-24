@@ -137,7 +137,7 @@ export default function IngredientesPage() {
       (i) => i.id !== renaming.id && keyOf(i.name) === keyOf(trimmed)
     );
     if (duplicate) {
-      setRenameError(`Ya existe «${duplicate.name}». Elegí otro nombre.`);
+      setRenameError(`Ya existe ${duplicate.name}. Elegí otro nombre.`);
       return;
     }
     setRenameSaving(true);
@@ -152,17 +152,25 @@ export default function IngredientesPage() {
     }
   };
 
-  const handleDelete = async (item: Ingredient) => {
-    const count = usage(item.id);
-    const msg =
-      count > 0
-        ? `«${item.name}» se usa en ${count} platillo${count === 1 ? "" : "s"} y se va a quitar de ahí también. ¿Eliminar?`
-        : `¿Eliminar «${item.name}»?`;
-    if (!window.confirm(msg)) return;
+  const [deleteTarget, setDeleteTarget] = useState<Ingredient | null>(null);
+  const [deleteSaving, setDeleteSaving] = useState(false);
+
+  const openDelete = (item: Ingredient) => setDeleteTarget(item);
+
+  const closeDelete = () => {
+    if (deleteSaving) return;
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || deleteSaving) return;
+    setDeleteSaving(true);
     try {
-      await deleteIngredient(item.id, item.name, dishes);
+      await deleteIngredient(deleteTarget.id, deleteTarget.name, dishes);
+      setDeleteTarget(null);
     } catch {
       window.alert("No se pudo eliminar. Revisá la conexión.");
+      setDeleteSaving(false);
     }
   };
 
@@ -234,9 +242,9 @@ export default function IngredientesPage() {
       {newName.trim().length > 0 && (
         <p className="field-hint">
           {exactExists
-            ? `«${newName.trim()}» ya existe — se marca abajo.`
+            ? `${newName.trim()} ya existe — se marca abajo.`
             : visible.length === 0
-              ? `No existe «${newName.trim()}». Enter para agregarlo como nuevo.`
+              ? `No existe ${newName.trim()}. Enter para agregarlo como nuevo.`
               : `${visible.length} coincidencia${visible.length === 1 ? "" : "s"}. Enter agrega solo si el nombre exacto no existe.`}
         </p>
       )}
@@ -312,7 +320,7 @@ export default function IngredientesPage() {
                   className="icon-btn"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDelete(item);
+                    openDelete(item);
                   }}
                   aria-label={`Eliminar ${item.name}`}
                 >
@@ -435,6 +443,49 @@ export default function IngredientesPage() {
       )}
 
       {detail && <DishDetail dish={detail} onClose={() => setDetail(null)} />}
+
+      {deleteTarget && (
+        <div className="modal-backdrop" onClick={closeDelete}>
+          <div
+            className="modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Eliminar ingrediente"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="modal-title">
+              ¿Eliminar <u>{deleteTarget.name}</u>?
+            </p>
+            {usage(deleteTarget.id) === 0 ? (
+              <p className="modal-text">Esta acción no se puede deshacer.</p>
+            ) : (
+              <p className="modal-text">
+                Se usa en {usage(deleteTarget.id)} platillo
+                {usage(deleteTarget.id) === 1 ? "" : "s"} y se va a quitar de ahí
+                también. Esta acción no se puede deshacer.
+              </p>
+            )}
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={closeDelete}
+                disabled={deleteSaving}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn--danger-solid"
+                onClick={confirmDelete}
+                disabled={deleteSaving}
+              >
+                {deleteSaving ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

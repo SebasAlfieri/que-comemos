@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DishDetail from "@/components/DishDetail";
 import DishForm from "@/components/DishForm";
 import {
@@ -21,6 +21,7 @@ export default function PlatillosPage() {
   const [detail, setDetail] = useState<Dish | null>(null);
   const [randomOpen, setRandomOpen] = useState(false);
   const [randomThree, setRandomThree] = useState<Dish[]>([]);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const unDishes = watchDishes(
@@ -73,6 +74,15 @@ export default function PlatillosPage() {
     setRandomOpen(true);
   };
 
+  const queryLower = query.trim().toLocaleLowerCase();
+
+  const visible = useMemo(() => {
+    if (!queryLower) return dishes;
+    return dishes.filter((d) =>
+      d.name.toLocaleLowerCase().includes(queryLower)
+    );
+  }, [dishes, queryLower]);
+
   if (loading) {
     return (
       <div className="loading">
@@ -100,6 +110,20 @@ export default function PlatillosPage() {
         + Nuevo platillo
       </button>
 
+      <div
+        className="input-row"
+        style={{ display: "flex", gap: "8px", margin: "0 0 16px" }}
+      >
+        <input
+          className="input"
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar platillos…"
+          style={{ flex: 1 }}
+        />
+      </div>
+
       {error && (
         <div className="error-box">
           <p className="error-box-title">⚠️ Sin conexión a la base</p>
@@ -113,8 +137,14 @@ export default function PlatillosPage() {
           <p className="empty-title">Todavía no hay platillos</p>
           <p>Agregá tu primera receta y los ingredientes que lleva.</p>
         </div>
+      ) : visible.length === 0 ? (
+        <div className="empty">
+          <span className="empty-icon">🍳</span>
+          <p className="empty-title">Sin coincidencias</p>
+          <p>Probá con otro nombre.</p>
+        </div>
       ) : (
-dishes.map((dish) => (
+        visible.map((dish) => (
           <article
             key={dish.id}
             className="list-item list-item--open"

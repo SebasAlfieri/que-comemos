@@ -97,7 +97,7 @@ export default function DishDetail({ dish, initialHave, onClose }: Props) {
   const buildMessage = () => {
     const haveList = dish.ingredients.filter((i) => have.has(i));
     const missingList = dish.ingredients.filter((i) => !have.has(i));
-    const lines = [`Lista de compras para «${dish.name}»`, ""];
+    const lines = [`Lista de compras para ${dish.name}`, ""];
     if (haveList.length > 0) {
       lines.push("*Ya tenemos:*");
       haveList.forEach((i) => lines.push(`• ${formatItem(i)} ✅`));
@@ -215,7 +215,7 @@ export default function DishDetail({ dish, initialHave, onClose }: Props) {
             aria-label={`Nota para ${noteItem}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="modal-title">Nota para «{noteItem}»</p>
+            <p className="modal-title">Nota para <u>{noteItem}</u></p>
             <p className="modal-text">
               Agregá una nota para este ingrediente en la lista de compras.
             </p>
