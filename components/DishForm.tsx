@@ -20,6 +20,18 @@ type Props = {
   onClose: () => void;
 };
 
+function listSignature(value: string[] | undefined) {
+  return (value ?? []).map(keyOf).sort().join("|");
+}
+
+function notesSignature(value: Record<string, string> | undefined) {
+  const entries = Object.entries(value ?? {}).map(
+    ([k, v]) => [keyOf(k), v] as const
+  );
+  entries.sort((a, b) => a[0].localeCompare(b[0]));
+  return JSON.stringify(entries);
+}
+
 export default function DishForm({ initial, ingredients, onClose }: Props) {
   const [name, setName] = useState(initial?.name ?? "");
   const [link, setLink] = useState(initial?.link ?? "");
@@ -49,6 +61,15 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+
+  const dirty =
+    name !== (initial?.name ?? "") ||
+    link.trim() !== (initial?.link ?? "").trim() ||
+    effort !== (initial?.effort ?? "") ||
+    dishNote !== (initial?.note ?? "") ||
+    listSignature(selected) !== listSignature(initial?.ingredients) ||
+    notesSignature(notes) !== notesSignature(initial?.notes);
 
   const confirmDelete = async () => {
     if (!initial) return;
@@ -95,7 +116,22 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
     });
   };
 
+  const requestClose = () => {
+    if (saving) return;
+    if (dirty) {
+      setCloseConfirmOpen(true);
+      return;
+    }
+    onClose();
+  };
+
+  const discardAndClose = () => {
+    setCloseConfirmOpen(false);
+    onClose();
+  };
+
   const handleSave = async () => {
+    setCloseConfirmOpen(false);
     if (!name.trim()) {
       setError("Poné un nombre para el platillo.");
       return;
@@ -118,13 +154,13 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
 
   return (
     <>
-      <div className="drawer-backdrop" onClick={onClose} />
+      <div className="drawer-backdrop" onClick={requestClose} />
       <div className="drawer" role="dialog" aria-label="Nuevo platillo">
         <div className="drawer-header">
           <h2 className="drawer-title">
             {initial ? "Editar platillo" : "Nuevo platillo"}
           </h2>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Cerrar">
+          <button type="button" className="icon-btn" onClick={requestClose} aria-label="Cerrar">
             ✕
           </button>
         </div>
@@ -312,6 +348,45 @@ export default function DishForm({ initial, ingredients, onClose }: Props) {
                 disabled={saving}
               >
                 {saving ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {closeConfirmOpen && (
+        <div
+          className="modal-backdrop"
+          onClick={() => !saving && setCloseConfirmOpen(false)}
+        >
+          <div
+            className="modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Guardar los cambios"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="modal-title">¿Querés guardar los cambios?</p>
+            <p className="modal-text">
+              Hay cambios sin guardar. Si los guardás, el platillo queda
+              actualizado.
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={discardAndClose}
+                disabled={saving}
+              >
+                Descartar
+              </button>
+              <button
+                type="button"
+                className="btn btn--accent"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? "Guardando…" : "Guardar"}
               </button>
             </div>
           </div>
