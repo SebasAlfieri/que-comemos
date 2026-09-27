@@ -510,6 +510,16 @@ select,
   filter: brightness(1.08);
 }
 
+.btn--wsp {
+  background: #128c7e;
+  border-color: #0f7a6e;
+  color: #fff;
+}
+
+.btn--wsp:hover {
+  filter: brightness(1.12);
+}
+
 .btn--danger {
   background: none;
   border-color: transparent;
