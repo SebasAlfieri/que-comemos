@@ -1,4 +1,4 @@
-import { db } from "./firebase";
+import { db, ensureAuth } from "./firebase";
 import {
   addDoc,
   collection,
@@ -66,11 +66,29 @@ export function dishLinkHref(link: string) {
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
+/** Espera el login anónimo antes de suscribirse; devuelve un unsubscribe usable de inmediato. */
+function afterAuth(
+  onError: (error: unknown) => void,
+  subscribe: () => () => void,
+): () => void {
+  let unsub: (() => void) | null = null;
+  let cancelled = false;
+  ensureAuth()
+    .then(() => {
+      if (!cancelled) unsub = subscribe();
+    })
+    .catch(onError);
+  return () => {
+    cancelled = true;
+    unsub?.();
+  };
+}
+
 export function watchIngredients(
   onChange: (items: Ingredient[]) => void,
   onError: (error: unknown) => void
 ) {
-  return onSnapshot(
+  return afterAuth(onError, () => onSnapshot(
     query(collection(db, "ingredients")),
     (snap) => {
       const items: Ingredient[] = snap.docs
@@ -80,14 +98,14 @@ export function watchIngredients(
       onChange(items);
     },
     onError
-  );
+  ));
 }
 
 export function watchDishes(
   onChange: (items: Dish[]) => void,
   onError: (error: unknown) => void
 ) {
-  return onSnapshot(
+  return afterAuth(onError, () => onSnapshot(
     query(collection(db, "dishes")),
     (snap) => {
       const items: Dish[] = snap.docs
@@ -105,12 +123,13 @@ export function watchDishes(
       onChange(items);
     },
     onError
-  );
+  ));
 }
 
 export async function addIngredient(
   name: string
 ): Promise<{ id: string; name: string; created: boolean } | null> {
+  await ensureAuth();
   const nameSafe = normalizeName(name);
   if (!nameSafe) return null;
 
@@ -140,6 +159,7 @@ export async function renameIngredient(
   newName: string,
   dishes: Dish[]
 ) {
+  await ensureAuth();
   const newNameSafe = normalizeName(newName);
   if (!newNameSafe || !oldName) return;
 
@@ -163,6 +183,7 @@ export async function renameIngredient(
 }
 
 export async function deleteIngredient(id: string, name: string, dishes: Dish[]) {
+  await ensureAuth();
   const batch = writeBatch(db);
   batch.delete(doc(db, "ingredients", id));
   for (const dish of dishes) {
@@ -190,6 +211,7 @@ export async function saveDish(
   effort: Effort | undefined = undefined,
   note = ""
 ) {
+  await ensureAuth();
   const nameSafe = normalizeName(name);
   if (!nameSafe) return;
   const ingredientsSafe = ingredients
@@ -230,5 +252,6 @@ export async function saveDish(
 }
 
 export async function deleteDish(id: string) {
+  await ensureAuth();
   await deleteDoc(doc(db, "dishes", id));
 }
