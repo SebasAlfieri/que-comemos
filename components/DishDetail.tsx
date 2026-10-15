@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { dishLinkHref, type Dish } from "@/lib/db";
 
 const CONTACTS = [
-  { label: "Mandar a Seba", phone: "5491122251843", className: "btn--seba" },
-  { label: "Mandar a Belu", phone: "5491130099706", className: "btn--belu" },
+  { label: "Enviar a Axel", phone: "5491173630573", className: "btn--axel" },
+  { label: "Enviar a Luchi", phone: "5491170661086", className: "btn--luchi" },
 ];
 
 type Props = {

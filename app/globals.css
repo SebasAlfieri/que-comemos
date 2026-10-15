@@ -490,23 +490,23 @@ select,
   color: var(--muted);
 }
 
-.btn--seba {
+.btn--axel {
   background: #4a7fb5;
   border-color: #4a7fb5;
   color: #fff;
 }
 
-.btn--seba:hover {
+.btn--axel:hover {
   filter: brightness(1.08);
 }
 
-.btn--belu {
+.btn--luchi {
   background: #cf8344;
   border-color: #cf8344;
   color: #fff;
 }
 
-.btn--belu:hover {
+.btn--luchi:hover {
   filter: brightness(1.08);
 }
 

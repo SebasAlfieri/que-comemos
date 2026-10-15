@@ -17,13 +17,13 @@ import {
 const STORAGE_KEY = "que-comemos:available";
 
 const HOME_TITLES = [
-  "Tengo hambre Belén 💀",
-  "¿Qué comemos Beluu? 👩‍🍳",
-  "¿Qué comemoo?",
-  "¿Qué comemos?",
-  "A ver que hay pa comer",
-  "Qué comemos version retro",
-  "Te quiero Beluuu",
+  "Qué comemos Axel?",
+  "Qué comemos Luchi?",
+  "Qué comemos Axel?",
+  "Qué comemos Luchi?",
+  "Qué comemos Axel?",
+  "Qué comemos Luchi?",
+  "Cómanme esta (a pipo)",
 ];
 
 type Match = {
@@ -53,7 +53,7 @@ export default function CocinaPage() {
   const [error, setError] = useState<string | null>(null);
   const [onlyMarks, setOnlyMarks] = useState(true);
   const [detail, setDetail] = useState<{ dish: Dish; have: string[] } | null>(
-    null
+    null,
   );
 
   useEffect(() => {
